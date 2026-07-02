@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Gerencial — Demo Comercial | Vibras Positivas HM</title>
+
+<!-- Open Graph (obligatorio) -->
+<meta property="og:title" content="Portal Gerencial para Distribuidoras — Demo">
+<meta property="og:description" content="Dashboard gerencial en tiempo real conectado a su ERP SQL Server: ventas, cartera, inventario y proveedores. Sus datos nunca salen de su empresa.">
+<meta property="og:image" content="https://vibraspositivashm.com/img/og-demo-portal.png">
+<meta property="og:url" content="https://vibraspositivashm.com/demo-portal/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vibras Positivas HM">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Portal Gerencial para Distribuidoras — Demo">
+<meta name="twitter:image" content="https://vibraspositivashm.com/img/og-demo-portal.png">
+
+<style>
+:root{
+  --bg:#0b1020; --panel:#121a30; --panel2:#0e1526; --border:#1e2a48;
+  --text:#dfe7f5; --muted:#8494b8;
+  --gold:#f5b73c; --green:#2fd08c; --red:#ff5d5d; --cyan:#39c3e6;
+  --orange:#ff9d45; --purple:#a98bff; --blue:#4f8cff;
+  --font-num:'Consolas','Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,Arial,sans-serif;min-height:100vh}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--panel2);border-right:1px solid var(--border);padding:18px 0;flex-shrink:0;display:flex;flex-direction:column}
+.logo{padding:0 20px 14px;border-bottom:1px solid var(--border)}
+.logo h1{color:var(--gold);font-size:20px;letter-spacing:2px}
+.logo span{color:var(--muted);font-size:11px}
+.nav-group{padding:14px 0 4px}
+.nav-title{padding:4px 20px;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13.5px;color:var(--text);cursor:pointer;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(79,140,255,.08)}
+.nav-item.active{background:rgba(79,140,255,.12);border-left-color:var(--blue);color:#fff}
+.sidebar-footer{margin-top:auto;padding:14px 20px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border)}
+.main{flex:1;padding:22px 26px;overflow-x:hidden}
+
+/* ---------- Topbar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.topbar h2{font-size:19px}
+.demo-badge{background:var(--purple);color:#0b1020;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:1px;vertical-align:middle;margin-left:8px}
+.periodo{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.periodo input{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:var(--font-num);font-size:13px}
+.btn{background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+.btn:hover{opacity:.9}
+.hamburger{display:none;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:18px;padding:6px 12px;border-radius:8px;cursor:pointer}
+
+/* ---------- KPI cards ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi .label{font-size:10.5px;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.kpi .value{font-family:var(--font-num);font-size:21px;font-weight:700}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:5px}
+.kpi::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--c,var(--blue))}
+
+/* ---------- Alertas ---------- */
+.alert{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--c,var(--red));border-radius:10px;padding:11px 16px;margin-bottom:10px;font-size:13.5px}
+.alert .amt{font-family:var(--font-num);font-weight:700;color:var(--c,var(--red))}
+
+/* ---------- Paneles ---------- */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.panel h3{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.panel h3 .amt{font-family:var(--font-num);color:var(--gold)}
+
+/* Barras vendedores */
+.vrow{display:grid;grid-template-columns:170px 1fr 110px;gap:10px;align-items:center;margin-bottom:9px;font-size:12.5px}
+.vrow .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.vbar{height:9px;background:#182240;border-radius:6px;overflow:hidden}
+.vbar i{display:block;height:100%;background:var(--green);border-radius:6px;width:0;transition:width 1s ease}
+.vrow .val{font-family:var(--font-num);text-align:right;color:var(--text)}
+
+/* Cartera edades stacked */
+.stacked{display:flex;height:16px;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.stacked i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted)}
+.legend b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+
+/* Tablas */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{padding:8px 10px;text-align:left;font-size:10.5px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid rgba(30,42,72,.5)}
+td.num{font-family:var(--font-num);text-align:right}
+.pill{font-size:10.5px;padding:2px 9px;border-radius:12px;font-weight:600}
+.pill.ok{background:rgba(47,208,140,.15);color:var(--green)}
+.pill.warn{background:rgba(255,157,69,.15);color:var(--orange)}
+.pill.bad{background:rgba(255,93,93,.15);color:var(--red)}
+.table-wrap{overflow-x:auto}
+
+.footer{ text-align:center;color:var(--muted);font-size:11px;padding:18px 0 6px}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- Móvil ---------- */
+@media(max-width:820px){
+  .sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:50;transition:left .25s ease}
+  .sidebar.open{left:0;box-shadow:0 0 40px rgba(0,0,0,.6)}
+  .hamburger{display:block}
+  .main{padding:16px 14px}
+  .vrow{grid-template-columns:110px 1fr 90px;font-size:11.5px}
+  .kpi .value{font-size:18px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;display:none}
+  .overlay.show{display:block}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="toggleMenu(false)"></div>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <h1>DEMO S.A.S.</h1>
+      <span>Portal Gerencial v2.0</span>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">Principal</div>
+      <div class="nav-item active" data-view="dashboard" onclick="go(this)">📊 Dashboard</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">Comercial</div>
+      <div class="nav-item" data-view="cartera" onclick="go(this)">💳 Cartera edades</div>
+      <div class="nav-item" data-view="vendedores" onclick="go(this)">📈 Análisis vendedores</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">Inventario</div>
+      <div class="nav-item" data-view="inventario" onclick="go(this)">📦 Inventario real</div>
+      <div class="nav-item" data-view="sinmov" onclick="go(this)">🐢 Sin movimiento</div>
+      <div class="nav-item" data-view="sugerido" onclick="go(this)">🛒 Sugerido pedidos</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">Clientes</div>
+      <div class="nav-item" data-view="pareto" onclick="go(this)">🏆 Pareto clientes</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">Proveedores</div>
+      <div class="nav-item" data-view="cxp" onclick="go(this)">🧾 CXP Proveedores</div>
+      <div class="nav-item" data-view="tesoreria" onclick="go(this)">🏦 Tesorería</div>
+      <div class="nav-item" data-view="presupuesto" onclick="go(this)">🎯 Presupuesto cobro</div>
+    </div>
+    <div class="sidebar-footer">Vibras Positivas HM</div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+        <h2 id="viewTitle">Dashboard Gerencial <span class="demo-badge">DEMO — DATOS FICTICIOS</span></h2>
+      </div>
+      <div class="periodo">
+        Período <input type="text" id="f1" readonly> <input type="text" id="f2" readonly>
+        <button class="btn" onclick="animate()">⟳ Actualizar</button>
+      </div>
+    </div>
+
+    <!-- ===== VISTA: DASHBOARD ===== -->
+    <section class="view active" id="view-dashboard">
+      <div class="kpis">
+        <div class="kpi" style="--c:var(--gold)"><div class="label">🪙 Ventas netas</div><div class="value" style="color:var(--gold)">$ 312.480.950</div><div class="sub">Bruto: $ 312.902.115</div></div>
+        <div class="kpi" style="--c:var(--red)"><div class="label">↩ Devoluciones</div><div class="value" style="color:var(--red)">$ 421.165</div><div class="sub">0.1% de ventas</div></div>
+        <div class="kpi" style="--c:var(--orange)"><div class="label">💼 Total cartera</div><div class="value" style="color:var(--orange)">$ 3.874.220.510</div><div class="sub">598 clientes · 27.8% vencido</div></div>
+        <div class="kpi" style="--c:var(--cyan)"><div class="label">⏳ Días cartera</div><div class="value" style="color:var(--cyan)">418 días</div><div class="sub">27.8% vencido</div></div>
+        <div class="kpi" style="--c:var(--orange)"><div class="label">📦 Stock crítico</div><div class="value" style="color:var(--orange)">124 refs</div><div class="sub">Bajo mínimo</div></div>
+        <div class="kpi" style="--c:var(--purple)"><div class="label">🚫 Sin compra</div><div class="value" style="color:var(--purple)">Ver módulo</div><div class="sub">Clientes sin compra</div></div>
+      </div>
+
+      <div class="alert" style="--c:var(--red)"><span>🔴 Cartera vencida crítica: 27.8%</span><span class="amt">$ 1.077.033.302</span></div>
+      <div class="alert" style="--c:var(--orange)"><span>📦 124 productos en stock crítico</span></div>
+
+      <div class="panel">
+        <h3>Top vendedores — Ventas netas</h3>
+        <div id="topVend"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Cartera por edades al <span id="hoy"></span> <span class="amt">$ 3.874.220.510</span></h3>
+        <div class="stacked" id="stacked"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: CARTERA ===== -->
+    <section class="view" id="view-cartera">
+      <div class="panel">
+        <h3>Cartera por edades — Detalle por cliente <span class="amt">$ 3.874.220.510</span></h3>
+        <div class="table-wrap"><table>
+          <tr><th>Cliente</th><th>Vendedor</th><th style="text-align:right">Corriente</th><th style="text-align:right">Vencido</th><th style="text-align:right">Total</th><th>Estado</th></tr>
+          <tr><td>Supermercado La Economía</td><td>D. Torres</td><td class="num">$ 48.220.100</td><td class="num">$ 0</td><td class="num">$ 48.220.100</td><td><span class="pill ok">Al día</span></td></tr>
+          <tr><td>Autoservicio El Progreso</td><td>R. Reyes</td><td class="num">$ 22.410.800</td><td class="num">$ 8.115.300</td><td class="num">$ 30.526.100</td><td><span class="pill warn">31-60 días</span></td></tr>
+          <tr><td>Granero Doña Rosa</td><td>L. Castellar</td><td class="num">$ 5.902.450</td><td class="num">$ 19.740.220</td><td class="num">$ 25.642.670</td><td><span class="pill bad">+90 días</span></td></tr>
+          <tr><td>Minimercado Central</td><td>A. Sánchez</td><td class="num">$ 18.330.900</td><td class="num">$ 2.201.500</td><td class="num">$ 20.532.400</td><td><span class="pill warn">1-30 días</span></td></tr>
+          <tr><td>Distribuciones El Valle</td><td>J. Quintero</td><td class="num">$ 16.874.200</td><td class="num">$ 0</td><td class="num">$ 16.874.200</td><td><span class="pill ok">Al día</span></td></tr>
+          <tr><td>Tienda Mixta San José</td><td>R. Abendaño</td><td class="num">$ 3.115.700</td><td class="num">$ 11.960.400</td><td class="num">$ 15.076.100</td><td><span class="pill bad">+90 días</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ En la versión real este módulo lee directamente su ERP SQL Server con actualización en tiempo real y filtros por vendedor, zona y edad de cartera.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: VENDEDORES ===== -->
+    <section class="view" id="view-vendedores">
+      <div class="panel">
+        <h3>Análisis de vendedores — Mes actual</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Vendedor</th><th style="text-align:right">Ventas netas</th><th style="text-align:right">Cobros</th><th style="text-align:right">% Cumpl. meta</th><th>Tendencia</th></tr>
+          <tr><td>Daniel Torres</td><td class="num">$ 171.204.330</td><td class="num">$ 148.900.115</td><td class="num" style="color:var(--green)">108%</td><td><span class="pill ok">▲ Subiendo</span></td></tr>
+          <tr><td>Roy Reyes</td><td class="num">$ 31.882.410</td><td class="num">$ 27.310.980</td><td class="num" style="color:var(--green)">96%</td><td><span class="pill ok">▲ Subiendo</span></td></tr>
+          <tr><td>Lorenzo Castellar</td><td class="num">$ 29.450.200</td><td class="num">$ 30.118.760</td><td class="num" style="color:var(--orange)">84%</td><td><span class="pill warn">▬ Estable</span></td></tr>
+          <tr><td>Alexander Sánchez</td><td class="num">$ 26.910.740</td><td class="num">$ 21.404.500</td><td class="num" style="color:var(--orange)">79%</td><td><span class="pill warn">▬ Estable</span></td></tr>
+          <tr><td>Rubén Abendaño</td><td class="num">$ 20.115.880</td><td class="num">$ 15.230.100</td><td class="num" style="color:var(--red)">61%</td><td><span class="pill bad">▼ Bajando</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real incluye comportamiento histórico, cobro proyectado vs. real y alertas por WhatsApp a cada vendedor.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: SUGERIDO ===== -->
+    <section class="view" id="view-sugerido">
+      <div class="panel">
+        <h3>Sugerido de pedidos — Productos bajo stock mínimo</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Referencia</th><th>Producto</th><th>Proveedor</th><th style="text-align:right">Tengo</th><th style="text-align:right">Mínimo</th><th style="text-align:right">Sugerido</th></tr>
+          <tr><td class="num">A-1042</td><td>Galleta wafer vainilla x12</td><td>Proveedor Alfa</td><td class="num" style="color:var(--red)">14</td><td class="num">40</td><td class="num" style="color:var(--green)">86</td></tr>
+          <tr><td class="num">B-2210</td><td>Sal refinada 500g x24</td><td>Proveedor Beta</td><td class="num" style="color:var(--red)">8</td><td class="num">30</td><td class="num" style="color:var(--green)">72</td></tr>
+          <tr><td class="num">C-0918</td><td>Chocolate de mesa 250g</td><td>Proveedor Gamma</td><td class="num" style="color:var(--red)">21</td><td class="num">50</td><td class="num" style="color:var(--green)">109</td></tr>
+          <tr><td class="num">A-1177</td><td>Caramelo surtido x100</td><td>Proveedor Alfa</td><td class="num" style="color:var(--red)">5</td><td class="num">25</td><td class="num" style="color:var(--green)">60</td></tr>
+          <tr><td class="num">D-3305</td><td>Arroz premium 5kg</td><td>Proveedor Delta</td><td class="num" style="color:var(--red)">12</td><td class="num">35</td><td class="num" style="color:var(--green)">78</td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ El sistema real calcula el sugerido con el promedio de rotación mensual, agrupa por proveedor y genera el pedido listo para enviar.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: PARETO ===== -->
+    <section class="view" id="view-pareto">
+      <div class="panel">
+        <h3>Pareto de clientes — 80/20</h3>
+        <div class="table-wrap"><table>
+          <tr><th>#</th><th>Cliente</th><th style="text-align:right">Ventas acumuladas</th><th style="text-align:right">% del total</th><th style="text-align:right">% acumulado</th></tr>
+          <tr><td>1</td><td>Supermercado La Economía</td><td class="num">$ 51.204.900</td><td class="num">16.4%</td><td class="num">16.4%</td></tr>
+          <tr><td>2</td><td>Autoservicio El Progreso</td><td class="num">$ 38.115.300</td><td class="num">12.2%</td><td class="num">28.6%</td></tr>
+          <tr><td>3</td><td>Distribuciones El Valle</td><td class="num">$ 29.870.140</td><td class="num">9.6%</td><td class="num">38.2%</td></tr>
+          <tr><td>4</td><td>Minimercado Central</td><td class="num">$ 24.410.220</td><td class="num">7.8%</td><td class="num">46.0%</td></tr>
+          <tr><td>5</td><td>Granero Doña Rosa</td><td class="num">$ 19.905.870</td><td class="num">6.4%</td><td class="num">52.4%</td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real clasifica automáticamente clientes A, B y C y cruza con cartera para priorizar la gestión comercial.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: INVENTARIO REAL ===== -->
+    <section class="view" id="view-inventario">
+      <div class="kpis">
+        <div class="kpi" style="--c:var(--green)"><div class="label">📦 Valor inventario</div><div class="value" style="color:var(--green)">$ 1.842.310.400</div><div class="sub">Al costo ponderado</div></div>
+        <div class="kpi" style="--c:var(--cyan)"><div class="label">🔢 Referencias activas</div><div class="value" style="color:var(--cyan)">1.480</div><div class="sub">En bodega principal</div></div>
+        <div class="kpi" style="--c:var(--orange)"><div class="label">⚠️ Bajo mínimo</div><div class="value" style="color:var(--orange)">124 refs</div><div class="sub">Requieren pedido</div></div>
+        <div class="kpi" style="--c:var(--red)"><div class="label">🔺 Sobre máximo</div><div class="value" style="color:var(--red)">62 refs</div><div class="sub">Capital inmovilizado</div></div>
+      </div>
+      <div class="panel">
+        <h3>Inventario valorizado por categoría</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Categoría</th><th style="text-align:right">Referencias</th><th style="text-align:right">Unidades</th><th style="text-align:right">Valor al costo</th><th style="text-align:right">% del total</th><th>Rotación</th></tr>
+          <tr><td>Galletería y confites</td><td class="num">412</td><td class="num">38.240</td><td class="num">$ 621.450.800</td><td class="num">33.7%</td><td><span class="pill ok">Alta</span></td></tr>
+          <tr><td>Abarrotes y granos</td><td class="num">305</td><td class="num">21.118</td><td class="num">$ 498.220.150</td><td class="num">27.0%</td><td><span class="pill ok">Alta</span></td></tr>
+          <tr><td>Aseo hogar</td><td class="num">288</td><td class="num">15.904</td><td class="num">$ 342.815.900</td><td class="num">18.6%</td><td><span class="pill warn">Media</span></td></tr>
+          <tr><td>Bebidas</td><td class="num">240</td><td class="num">12.410</td><td class="num">$ 254.108.300</td><td class="num">13.8%</td><td><span class="pill warn">Media</span></td></tr>
+          <tr><td>Cuidado personal</td><td class="num">235</td><td class="num">8.115</td><td class="num">$ 125.715.250</td><td class="num">6.9%</td><td><span class="pill bad">Baja</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real valoriza con el costo ponderado del ERP, compara stock físico vs. sistema y detecta diferencias por referencia y bodega.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: SIN MOVIMIENTO ===== -->
+    <section class="view" id="view-sinmov">
+      <div class="panel">
+        <h3>Productos sin movimiento — Últimos 90 días <span class="amt">$ 96.412.300 inmovilizados</span></h3>
+        <div class="table-wrap"><table>
+          <tr><th>Referencia</th><th>Producto</th><th style="text-align:right">Stock</th><th style="text-align:right">Valor al costo</th><th style="text-align:right">Última venta</th><th>Días sin venta</th></tr>
+          <tr><td class="num">E-4410</td><td>Vela aromática premium x6</td><td class="num">184</td><td class="num">$ 12.480.200</td><td class="num">2026-02-18</td><td><span class="pill bad">134 días</span></td></tr>
+          <tr><td class="num">F-1120</td><td>Copa plástica decorada x50</td><td class="num">96</td><td class="num">$ 8.910.400</td><td class="num">2026-03-04</td><td><span class="pill bad">120 días</span></td></tr>
+          <tr><td class="num">E-2208</td><td>Adorno navideño surtido</td><td class="num">312</td><td class="num">$ 21.340.800</td><td class="num">2026-01-10</td><td><span class="pill bad">173 días</span></td></tr>
+          <tr><td class="num">G-0455</td><td>Juego de mesa familiar</td><td class="num">45</td><td class="num">$ 6.115.900</td><td class="num">2026-03-22</td><td><span class="pill warn">102 días</span></td></tr>
+          <tr><td class="num">F-3391</td><td>Termo metálico 1L</td><td class="num">78</td><td class="num">$ 9.204.100</td><td class="num">2026-03-28</td><td><span class="pill warn">96 días</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real sugiere estrategias: descuento, combo con producto de alta rotación o devolución al proveedor, y calcula el capital liberado.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: CXP PROVEEDORES ===== -->
+    <section class="view" id="view-cxp">
+      <div class="kpis">
+        <div class="kpi" style="--c:var(--red)"><div class="label">🧾 Total por pagar</div><div class="value" style="color:var(--red)">$ 987.415.220</div><div class="sub">18 proveedores</div></div>
+        <div class="kpi" style="--c:var(--orange)"><div class="label">⏰ Vence esta semana</div><div class="value" style="color:var(--orange)">$ 214.880.500</div><div class="sub">6 facturas</div></div>
+        <div class="kpi" style="--c:var(--green)"><div class="label">💰 Descuentos por pronto pago</div><div class="value" style="color:var(--green)">$ 8.412.300</div><div class="sub">Disponibles si paga antes del 10</div></div>
+      </div>
+      <div class="panel">
+        <h3>Cuentas por pagar — Por proveedor</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Proveedor</th><th style="text-align:right">Facturas</th><th style="text-align:right">Total CXP</th><th style="text-align:right">Próximo vencimiento</th><th>Estado</th></tr>
+          <tr><td>Proveedor Alfa S.A.</td><td class="num">8</td><td class="num">$ 312.410.800</td><td class="num">2026-07-05</td><td><span class="pill warn">Vence pronto</span></td></tr>
+          <tr><td>Proveedor Beta Ltda.</td><td class="num">5</td><td class="num">$ 248.115.400</td><td class="num">2026-07-14</td><td><span class="pill ok">Al día</span></td></tr>
+          <tr><td>Proveedor Gamma S.A.S.</td><td class="num">6</td><td class="num">$ 198.740.220</td><td class="num">2026-07-03</td><td><span class="pill bad">Vence mañana</span></td></tr>
+          <tr><td>Proveedor Delta S.A.</td><td class="num">4</td><td class="num">$ 142.038.600</td><td class="num">2026-07-21</td><td><span class="pill ok">Al día</span></td></tr>
+          <tr><td>Proveedor Omega Ltda.</td><td class="num">3</td><td class="num">$ 86.110.200</td><td class="num">2026-07-09</td><td><span class="pill warn">Vence pronto</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real cruza CXP con la cartera del mismo proveedor (CXC), plazos de crédito y descuentos financieros para priorizar pagos.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: TESORERÍA ===== -->
+    <section class="view" id="view-tesoreria">
+      <div class="kpis">
+        <div class="kpi" style="--c:var(--green)"><div class="label">🏦 Saldo total bancos</div><div class="value" style="color:var(--green)">$ 428.910.350</div><div class="sub">3 cuentas activas</div></div>
+        <div class="kpi" style="--c:var(--cyan)"><div class="label">📥 Recaudo hoy</div><div class="value" style="color:var(--cyan)">$ 31.204.800</div><div class="sub">Consignaciones + efectivo</div></div>
+        <div class="kpi" style="--c:var(--red)"><div class="label">📤 Pagos programados</div><div class="value" style="color:var(--red)">$ 214.880.500</div><div class="sub">Próximos 7 días</div></div>
+        <div class="kpi" style="--c:var(--gold)"><div class="label">📊 Flujo proyectado 7d</div><div class="value" style="color:var(--gold)">+$ 42.615.100</div><div class="sub">Recaudo − pagos</div></div>
+      </div>
+      <div class="panel">
+        <h3>Saldos por cuenta bancaria</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Banco</th><th>Cuenta</th><th style="text-align:right">Saldo actual</th><th style="text-align:right">Movimientos hoy</th><th>Uso</th></tr>
+          <tr><td>Banco Nacional</td><td class="num">•••• 4821</td><td class="num">$ 248.310.200</td><td class="num" style="color:var(--green)">+$ 18.415.300</td><td>Recaudo clientes</td></tr>
+          <tr><td>Banco Regional</td><td class="num">•••• 7734</td><td class="num">$ 132.480.900</td><td class="num" style="color:var(--red)">−$ 42.108.500</td><td>Pago proveedores</td></tr>
+          <tr><td>Banco Cooperativo</td><td class="num">•••• 1092</td><td class="num">$ 48.119.250</td><td class="num" style="color:var(--green)">+$ 2.904.100</td><td>Nómina y gastos</td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real proyecta el flujo de caja cruzando cobros esperados de cartera con vencimientos de CXP, y alerta cuando el saldo proyectado es insuficiente. Números de cuenta enmascarados (Ley 1581 de 2012).</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: PRESUPUESTO COBRO ===== -->
+    <section class="view" id="view-presupuesto">
+      <div class="kpis">
+        <div class="kpi" style="--c:var(--gold)"><div class="label">🎯 Meta de cobro del mes</div><div class="value" style="color:var(--gold)">$ 620.000.000</div><div class="sub">Julio 2026</div></div>
+        <div class="kpi" style="--c:var(--green)"><div class="label">✅ Cobrado a la fecha</div><div class="value" style="color:var(--green)">$ 41.318.900</div><div class="sub">6.7% de la meta</div></div>
+        <div class="kpi" style="--c:var(--cyan)"><div class="label">📅 Proyección de cierre</div><div class="value" style="color:var(--cyan)">$ 598.410.000</div><div class="sub">96.5% de cumplimiento</div></div>
+      </div>
+      <div class="panel">
+        <h3>Cobro proyectado vs. real — Por vendedor</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Vendedor</th><th style="text-align:right">Meta cobro</th><th style="text-align:right">Cobrado</th><th style="text-align:right">% avance</th><th>Proyección</th></tr>
+          <tr><td>Daniel Torres</td><td class="num">$ 310.000.000</td><td class="num">$ 24.180.400</td><td class="num" style="color:var(--green)">7.8%</td><td><span class="pill ok">Cumple</span></td></tr>
+          <tr><td>Roy Reyes</td><td class="num">$ 85.000.000</td><td class="num">$ 6.410.200</td><td class="num" style="color:var(--green)">7.5%</td><td><span class="pill ok">Cumple</span></td></tr>
+          <tr><td>Lorenzo Castellar</td><td class="num">$ 78.000.000</td><td class="num">$ 4.915.800</td><td class="num" style="color:var(--orange)">6.3%</td><td><span class="pill warn">En riesgo</span></td></tr>
+          <tr><td>Alexander Sánchez</td><td class="num">$ 75.000.000</td><td class="num">$ 3.812.500</td><td class="num" style="color:var(--orange)">5.1%</td><td><span class="pill warn">En riesgo</span></td></tr>
+          <tr><td>Rubén Abendaño</td><td class="num">$ 72.000.000</td><td class="num">$ 2.000.000</td><td class="num" style="color:var(--red)">2.8%</td><td><span class="pill bad">No cumple</span></td></tr>
+        </table></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">ℹ️ La versión real calcula la meta según vencimientos reales de cartera de cada vendedor, compara día a día contra recibos de caja y envía el avance por WhatsApp.</p>
+      </div>
+    </section>
+
+    <div class="footer">Desarrollada por Vibras Positivas HM — Derechos de Autor Reservados</div>
+  </main>
+</div>
+
+<script>
+/* ===== Fecha Colombia (UTC-5) ===== */
+function fechaColombia(offsetDias=0){
+  const d=new Date(Date.now()-5*3600*1000+offsetDias*86400000);
+  return d.toISOString().slice(0,10);
+}
+function fmt(iso){const[y,m,dd]=iso.split('-');return dd+'/'+m+'/'+y;}
+document.getElementById('f1').value=fmt(fechaColombia(-1));
+document.getElementById('f2').value=fmt(fechaColombia());
+document.getElementById('hoy').textContent=fechaColombia();
+
+/* ===== Datos ficticios ===== */
+const vendedores=[
+  ['DANIEL TORRES',171204330],
+  ['ROY REYES',31882410],
+  ['LORENZO CASTELLAR',29450200],
+  ['ALEXANDER SÁNCHEZ',26910740],
+  ['RUBÉN ABENDAÑO',20115880],
+  ['JUAN QUINTERO',19310450]
+];
+const edades=[
+  ['0-30d',68.2,'#2fd08c'],['31-60d',20.1,'#39c3e6'],['61-90d',1.8,'#4f8cff'],
+  ['91-120d',0.4,'#a98bff'],['121-180d',0.3,'#f5b73c'],['181-359d',0.7,'#ff9d45'],['+360d',8.5,'#ff5d5d']
+];
+
+function money(n){return '$ '+n.toLocaleString('es-CO');}
+
+function render(){
+  const max=vendedores[0][1];
+  document.getElementById('topVend').innerHTML=vendedores.map(v=>
+    `<div class="vrow"><div class="name">${v[0]}</div><div class="vbar"><i data-w="${(v[1]/max*100).toFixed(1)}"></i></div><div class="val">${money(v[1])}</div></div>`).join('');
+  document.getElementById('stacked').innerHTML=edades.map(e=>`<i style="width:${e[1]}%;background:${e[2]}"></i>`).join('');
+  document.getElementById('legend').innerHTML=edades.map(e=>`<span><b style="background:${e[2]}"></b>${e[0]} ${e[1]}%</span>`).join('');
+  animate();
+}
+function animate(){
+  document.querySelectorAll('.vbar i').forEach(b=>{b.style.width='0';setTimeout(()=>b.style.width=b.dataset.w+'%',80);});
+}
+render();
+
+/* ===== Navegación ===== */
+const titles={dashboard:'Dashboard Gerencial',cartera:'Cartera por Edades',vendedores:'Análisis de Vendedores',sugerido:'Sugerido de Pedidos',pareto:'Pareto de Clientes',inventario:'Inventario Real',sinmov:'Productos Sin Movimiento',cxp:'CXP Proveedores',tesoreria:'Tesorería',presupuesto:'Presupuesto de Cobro'};
+function go(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const v=el.dataset.view;
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('viewTitle').innerHTML=titles[v]+' <span class="demo-badge">DEMO — DATOS FICTICIOS</span>';
+  if(v==='dashboard')animate();
+  toggleMenu(false);
+  window.scrollTo({top:0});
+}
+function toggleMenu(force){
+  const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
+  const open=force!==undefined?force:!sb.classList.contains('open');
+  sb.classList.toggle('open',open);ov.classList.toggle('show',open);
+}
+</script>
+</body>
+</html>
